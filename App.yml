@@ -1,12 +1,12 @@
 ---
-- hosts: app
+- hosts: localhost
   become: yes
   gather_facts: no
   pre_tasks:
     - name: install python2
       raw: apt-get install python-simplejson -y
   tasks:
-    - name: Install a list of packages
+    - name: Update
       apt:
         update_cache: yes
         state: latest
@@ -19,49 +19,44 @@
         - openjdk-8-jdk
         - maven
         - wget
-    - script: /root/playbooks/script.sh
+    - script: /home/ubuntu/script.sh
       environment:
         JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
       register: shellout
     - debug: var=shellout
     - file:
         state: absent
-        path: /tmp/Java-Mysql-Simple-Login-Web-application
+        path: /opt/Java-Mysql-Simple-Login-Web-application
     - file:
         state: absent
-        path: /tmp/apache-tomcat-8.5.33
+        path: /opt/apache-tomcat-8.5.33
     - git:
         repo: 'https://github.com/Meghanakanakavidu/Java-Mysql-Simple-Login-Web-application.git'
-        dest: /tmp/Java-Mysql-Simple-Login-Web-application
+        dest: /opt/Java-Mysql-Simple-Login-Web-application
     - command: mvn clean install
       args:
-        chdir: /tmp/Java-Mysql-Simple-Login-Web-application
+        chdir: /opt/Java-Mysql-Simple-Login-Web-application
     - unarchive:
         src: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.33/bin/apache-tomcat-8.5.33.tar.gz
-        dest: /tmp
+        dest: /opt
         remote_src: yes
 #    - command: ./startup.sh
 #      args:
 #        chdir: /tmp/apache-tomcat-8.5.33/bin
 
     - copy:
-        src: /tmp/Java-Mysql-Simple-Login-Web-application/target/LoginWebApp.war
-        dest: /tmp/apache-tomcat-8.5.33/webapps/LoginWebApp.war
+        src: /opt/Java-Mysql-Simple-Login-Web-application/target/LoginWebApp.war
+        dest: /opt/apache-tomcat-8.5.33/webapps/LoginWebApp.war
         remote_src: yes
 
     - name: "Starting Apache server"
-      command: nohup /tmp/apache-tomcat-8.5.33/bin/startup.sh
-
-#    - name: Wait for port 8080 to become open on the host, don't start checking for 10 seconds
-  #    wait_for:
- #       port: 8080
-   #     delay: 10
+      command: nohup /opt/apache-tomcat-8.5.33/bin/startup.sh
 
     - name: Check grep
       sudo: yes
       run_once: true
   #when: ansible_hostname !=  "inception-{{ vms_subdomain }}"
-      shell: cat /tmp/apache-tomcat-8.5.33/logs/catalina.out | grep "Server startup"
+      shell: cat /opt/apache-tomcat-8.5.33/logs/catalina.out | grep "Server startup"
       register: command_res
   #with_dict: "{{ microservices }}"
       until: "command_res.rc == 0"
@@ -70,5 +65,3 @@
       delay: 10
     - name: Check the output
       debug: var=command_res
-
-

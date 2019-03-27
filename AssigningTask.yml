@@ -48,3 +48,6 @@
         src: /tmp/AssigningTask/target/Spring201-0.0.1-SNAPSHOT.war
         dest: /tmp/apache-tomcat-8.5.33/webapps/Spring201-0.0.1-SNAPSHOT.war
         remote_src: yes
+    - name: "Starting Apache server"
+      command: nohup /tmp/apache-tomcat-8.5.33/bin/startup.sh
+
